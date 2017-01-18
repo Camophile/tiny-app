@@ -3,9 +3,10 @@
 <html lang="en">
 <head>
   <title>TinyApp</title>
-  <% include partials/_header.ejs %>
 </head>
 <body>
+<% include partials/_header.ejs %>
+<header>Your shortened links</header>
   <p>
   <ul><% for(var x in urls) { %>
     <li><%= x %> - <%= urls[x] %><form method="post" action="/urls/<%= x %>/delete">

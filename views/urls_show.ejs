@@ -3,9 +3,10 @@
 <html lang="en">
 <head>
   <title>TinyApp</title>
-  <% include partials/_header.ejs %>
 </head>
 <body>
+<header>Keep coding</header>
+  <% include partials/_header.ejs %>
   <form action="/urls/<%= shortURL %>" method="POST">
     <label for="longURL">Enter URL</label>
     <input value="<%= longURL %>" type="text" name="longURL" placeholder="http://" style="width:300px">
