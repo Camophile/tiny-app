@@ -9,11 +9,10 @@
   <p>
   <ul><% for(var x in urls) { %>
     <li><%= x %> - <%= urls[x] %><form method="post" action="/urls/<%= x %>/delete">
-
-      <button>Delete</button>
+      <button>Delete</button><a href="/urls/<%= x %>" style="margin-left: 5px">Edit</a>
   </p>
   </form></li>
   <% } %></ul>
-  <a href="/short_link">short link</a>
+
 </body>
 </html>
