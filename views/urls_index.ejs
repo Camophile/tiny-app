@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <title>TinyApp</title>
+  <% include partials/_header.ejs %>
+</head>
+<body>
+  <p>
+  <ul><% for(var x in urls) { %>
+    <li><%= x %> - <%= urls[x] %><form method="post" action="/urls/<%= x %>/delete">
+
+      <button>Delete</button>
+  </p>
+  </form></li>
+  <% } %></ul>
+  <a href="/short_link">short link</a>
+</body>
+</html>
