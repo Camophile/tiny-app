@@ -1,8 +1,15 @@
 <!-- views/partials/header.ejs -->
 
 <header>
-  <form action="/login" method='post'>
-    <label for="userID">Enter username</label>
-    <input name="userID" type="text" placeholder="mystupidlogin">
-    <input type="submit" value="Sign in">
+  <% if(userID) { %>
+    <form action= "/logout" method=post>
+    <label for="userID"><%= userID %></label><button>Log out</button>
+    <% } %>
+  <% if(userID === undefined) { %>
+    <form action="/login" method="post">
+      <label for="userID">Enter username</label>
+      <input name="userID" type="text" placeholder="mystupidlogin">
+      <input type="submit" value="Sign in">
+    </form>
+  <% } %>
 </header>

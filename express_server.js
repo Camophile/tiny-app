@@ -25,24 +25,40 @@ function generateRandomString() {
 }
 
 app.get('/', (req, res) => {
-  res.end("<html<body>Hello <b>Mildred!</b></body></html>\n");
+  let templateVars = {
+    userID: req.cookies["userID"]
+  };
+  res.end("<html<body>Hello <b>Mildred!</b></body></html>\n", templateVars);
 });
 
 app.get('/urls.json', (req, res) => {
-  res.json(urlDatabase);
+  let templateVars = {
+    userID: req.cookies["userID"]
+  };
+  res.json(urlDatabase, templateVars);
 });
 
 app.get('/urls', (req, res) => {
-  res.render('urls_index', {urls: urlDatabase}
-  );
+  let templateVars = {
+    urls: urlDatabase,
+    userID: req.cookies["userID"]
+  };
+  res.render('urls_index', templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = {
+    userID: req.cookies["userID"]
+  };
+  res.render("urls_new", templateVars);
 });
 
 app.get('/urls/:id', (req, res) => {
-  let templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id] };
+  let templateVars = {
+    shortURL: req.params.id,
+    longURL: urlDatabase[req.params.id],
+    userID: req.cookies["userID"]
+  };
   res.render('urls_show', templateVars);
 });
 
@@ -63,20 +79,25 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  let newURL = { shortURL: req.params.id, longURL: urlDatabase[req.params.id] };
+  let templateVars = {
+    shortURL: req.params.id,
+    longURL: urlDatabase[req.params.id],
+    userID: req.cookies["userID"]
+  };
   urlDatabase[req.params.id] = req.body["longURL"];
-  res.render("urls_show", newURL);
+  res.render("urls_show", templateVars);
 });
 
 app.post("/login", (req, res) => {
-  res.cookie = req.body["userID"];
-  console.log(res.cookie);
-  res.redirect('/');
+  res.cookie("userID", req.body["userID"]);
+  res.redirect('/urls');
 });
+
+app.post("/logout", (req, res) => {
+  res.clearCookie("userID");
+  res.redirect('/urls')
+})
 
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
 });
-
-
-
