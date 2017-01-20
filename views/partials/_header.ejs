@@ -1,16 +1,17 @@
 <!-- views/partials/header.ejs -->
 
 <header>
-
-  <% if(locals.user === undefined) { %>
-    <form action="/register" method="post">
-      <label for="userID">Enter username</label>
-      <input name="userID" type="text" placeholder="mystupidlogin">
-      <input type="submit" value="Sign in">
-    </form>
-  <% } else { %>
+  <% if(user) { %>
     <form action= "/logout" method=post>
-    <label for="userID"><%= locals.user %></label><button>Log out</button>
+    <label for="email"><%= user.email %></label><button>Log out</button>
+    </form>
+
+  <% } else { %>
+    <form action="/login" method="post">
+      <label for="email">Enter Email</label>
+      <input name="email" type="email" placeholder="mystupidemail">
+      <input name="password" type="password" placeholder="123456789">
+      <input type="submit" value="Sign in"><a href="/register" style="margin-left: 5px">Register</a>
     </form>
     <% } %>
 </header>

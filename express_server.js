@@ -10,15 +10,13 @@ app.use(cookieParser());
 
 app.set('view engine', 'ejs');
 
-app.use(function(req, res, next){ //defines userID 'globally'
+app.use(function(req, res, next){ //defines userID global objects
                                   //accessible to other routes
-  res.locals.user = req.cookies["userID"];
-  res.locals.email = req.cookies["email"];
-  res.locals.password = req.cookies["password"];
+  res.locals.user = usersDatabase[req.cookies["userID"]];
   next();
 });
 
-var usersDatabase = {}; //set as obj of arrs?
+var usersDatabase = {"a2a8dd": {id: "a2a8dd", email: "test@email.com", password: "password"}};
 
 var urlDatabase = {
   'b2xVn2': 'http://www.lighthouselabs.ca',
@@ -55,8 +53,17 @@ function doesEmailExist(email, userData){
   return false;
 }
 
+function doesPasswordMatch(password, userData){
+  for(let id in userData){
+    if(password === userData[id]["password"]){
+      return true;
+    }
+  }
+  return false;
+}
+
 app.get('/', (req, res) => {
-  res.end("<html<body>Hello <b>Mildred!</b></body></html>\n");
+  res.redirect("/urls");
 });
 
 app.get('/urls.json', (req, res) => {
@@ -108,9 +115,34 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("userID", req.body["userID"]);
+  let email = req.body.email;
+  let password = req.body.password;
+  if(!doesEmailExist(email, usersDatabase)){
+    res.status(403).send("Ain't so sunshine when she's gone")
+    return;
+  }
+  if(!doesPasswordMatch(password, usersDatabase)){
+    res.status(403).send("You Shall Not Pass!");
+    return;
+  }
+
+  for(var id in usersDatabase){
+    if(req.body.email === usersDatabase[id]["email"]){
+      var userID = id;
+    }
+  }
+
+  res.cookie("userID", userID);
+  console.log(userID);
+  console.log(usersDatabase);
   res.redirect('/urls');
 });
+
+app.get("/login", (req, res) => {
+  res.cookie("userID");
+  res.cookie("email")
+  res.render("user_login");
+})
 
 app.post("/logout", (req, res) => {
   res.clearCookie("userID");
@@ -127,7 +159,6 @@ app.post("/register", (req, res) => {
   let email = req.body["email"];
   let password = req.body["password"];
 
-  console.log(usersDatabase);
   if(isFieldBlank(email, password)){
     res.status(400).send("Email and/or password field is empty");
     return;
@@ -136,16 +167,14 @@ app.post("/register", (req, res) => {
     res.status(400).send("email already registered");
     return;
   }
-  console.log(doesEmailExist(email, usersDatabase));
-  res.cookie("userID", id);
 
+  res.cookie("userID", id);
   usersDatabase[id] = {id: id,
                     email: req.body["email"],
                     password: req.body["password"]
                     };
 
   res.redirect("/")
-
 });
 
 app.listen(PORT, () => {
