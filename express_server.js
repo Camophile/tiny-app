@@ -12,13 +12,7 @@ app.use(cookieParser());
 
 app.set('view engine', 'ejs');
 
-app.use(function(req, res, next){ //defines userID global objects
-                                  //accessible to templates
-  res.locals.user = usersDatabase[req.cookies["userID"]];
-  res.locals.urls = urlDatabase;
 
-  next();
-});
 
 const usersDatabase = { //add two users and give one to each stored URL
   "a2a8dd": {
@@ -39,6 +33,26 @@ const urlDatabase = {'b2xVn2': {longURL: 'http://www.lighthouselabs.ca',
                   '9sm5xk': {longURL: 'http://www.google.com',
                               creator: 'y51qm9c'}
                   };
+
+const cookieSession = require('cookie-session');
+app.use(cookieSession({
+  name: 'session',
+  secret: 'mykey'
+}));
+
+
+app.use(function(req, res, next){ //defines userID global objects
+                                  //accessible to templates
+  if(req.session.userID){
+     res.locals.user = usersDatabase[req.session.userID]; //usersDatabase[req.cookie.userID];
+     res.locals.urls = urlDatabase;
+     next();
+  }
+  else{
+     next();
+  }
+
+});
 
 
 function generateRandomString() {
@@ -92,15 +106,18 @@ function doesPasswordMatch(password, userData) {
 }
 
 function checkLoggedIn(req, res, next) {
-  if(req.cookies["userID"]) {
+  // if(req.cookies["userID"]) {
+  //   next();
+  // } else {
+  if(req.session.userID) {
     next();
-  } else {
+  }else{
     res.status(401).send('User must be logged in. <a href="/login">Login</a>');
   }
 }
 
 app.get('/', (req, res) => {//Redirect to /urls if logged in, if not --> /login
-  if(req.cookies["userID"]) { //if user logged in
+  if(req.session.userID) { //if user logged in
     res.redirect('/urls');//redirect to /urls
   } else {
     res.redirect('/login'); // redirect to /login
@@ -123,15 +140,13 @@ app.get('/urls', checkLoggedIn, (req, res) => { //loop through urlDatabase to se
   // we need to loop through list of urls
   // for each url check to see if the creator is the same as the current user
   let filteredUrls = {}
-  let userID = req.cookies.userID;
+  let userID = req.session.userID;
 
   for(let id in res.locals.urls){
     if(res.locals.urls[id].creator === userID){ //if the user (creator) exists in urlsDatabase
-      filteredUrls[id] = res.locals.urls[id]; //gives the current user an object of urls owned
+      filteredUrls[id] = res.locals.urls[id]; //gives the current user an object of urls they own
     }
   }
-
-  console.log(filteredUrls);
 
   let templateVars = {
     urls: filteredUrls
@@ -146,10 +161,15 @@ app.get("/urls/new", (req, res) => {
 app.get('/urls/:id', (req, res) => { //first check whether user is signed in,
                                     //then check whether that user corresponds
                                     //to the user w access to the particular id
-  const url = res.locals.urls; // was `urlDatabase[req.params.id]`
-  console.log("res.locals.urls:", res.locals.urls, "\n");
 
-  if(!req.cookies["userID"]) {
+  const url = res.locals.urls; // was `urlDatabase[req.params.id]`
+  console.log("url", url, "\n");
+
+  // if(!req.cookies["userID"]){ //**req.session.user_ID**
+  //   return res.status(401).send('does not exist');
+  // }
+
+  if(!req.session.userID){ //**req.session.user_ID**
     return res.status(401).send('does not exist');
   }
 
@@ -157,12 +177,13 @@ app.get('/urls/:id', (req, res) => { //first check whether user is signed in,
   //   const shortURL = url[key];
   //   const longURL = url[key].longURL;
   // }
-  console.log("shortURL", url.shortURL, "\n");
+
   let templateVars = {
     shortURL: req.params.id, // was req.params.id
     longURL: urlDatabase[req.params.id].longURL
   };
 
+  console.log("shortURL", url.shortURL, "\n");
 
   // console.log("longURL", url.shortURL.longURL, "\n");
 
@@ -171,15 +192,25 @@ app.get('/urls/:id', (req, res) => { //first check whether user is signed in,
 
 app.post("/urls/create", (req, res) => {
   console.log("inside /urls/create")
-  if(!req.cookies["userID"]){
-    console.log("Cookies in Conditional", req.cookies["userID"]);
+  // if(!req.cookies["userID"]){ //**req.session.user_ID**
+  //   res.redirect("/login")
+  //   return;
+  // }
+
+   if(!req.session.userID){ //**req.session.user_ID**
     res.redirect("/login")
     return;
   }
 
+  var URL = req.body.longURL
+  if(!URL.startsWith('http')){
+    URL = 'http://' + req.body["longURL"];
+    console.log("no http");
+  }
+
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = { longURL: req.body["longURL"],
-                            creator: req.cookies["userID"]
+  urlDatabase[shortURL] = { longURL: URL,
+                            creator: req.session.userID //**req.session.user_ID**
                             };
 
   res.redirect(`/urls/${shortURL}`);
@@ -196,6 +227,7 @@ app.post("/urls/:id/delete", checkLoggedIn, (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
+  console.log("POST /urls/id")
   var URL = req.body.longURL
   if(!URL.startsWith('http')){
     URL = 'http://' + req.body["longURL"];
@@ -217,15 +249,20 @@ app.post("/login", (req, res) => {
   // if matching then log user in and redirect to '/'
 
   let userID = getIdByEmail(email);
-  //below was `password !== usersDatabase[userID]["hashed_password"`
-  if(!userID || !bcrypt.compareSync(password, usersDatabase[userID].password)) {
+
+  req.session.userID = userID;
+  console.log(req.session.userID);
+
+  if(!req.session.userID && !bcrypt.compareSync(password, usersDatabase[userID].password)) {
+  //if(!req.session.userID){
     res.status(401);
     res.send('Unable to login.');
     return;
   }
 
   // this happens if user has input valid email and password
-  res.cookie("userID", userID);
+  // res.cookie("userID", userID);
+  // res.session("userID", userID);
   res.redirect('/');
 });
 
@@ -234,7 +271,7 @@ app.get("/login", (req, res) => {
 })
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("userID");
+  req.session.userID = null;
   res.redirect('/urls')
 });
 
@@ -262,7 +299,9 @@ app.post("/register", (req, res) => {
   let hashed_password = bcrypt.hashSync(password, 10);
   console.log("Hashed password", hashed_password);
 
-  res.cookie("userID", id);
+  // res.cookie("userID", id);
+  req.session.userID = id;
+
   usersDatabase[id] = {
     id: id,
     email: email,
