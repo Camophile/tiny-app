@@ -5,13 +5,17 @@
   <title>TinyApp</title>
 </head>
 <body>
-<header>Keep coding</header>
-  <% include partials/_header.ejs %>
+<header></header>
+<% include partials/_header.ejs %>
+<% if (user) { %>
   <form action="/urls/<%= shortURL %>" method="POST">
     <label for="longURL">Enter URL</label>
     <input value="<%= longURL %>" type="text" name="longURL" placeholder="http://" style="width:300px">
     <input type="submit" value="Update">
   </form>
-  <%= shortURL %> - <%= longURL %>
+  <% if(shortURL) { %>
+    <%= shortURL %> - <a href="<%= longURL %>"><%= longURL %></a>
+  <% } %>
+<% } %>
 </body>
 </html>

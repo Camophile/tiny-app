@@ -5,15 +5,20 @@
   <title>TinyApp</title>
 </head>
 <body>
-<% include partials/_header.ejs %>
-<header>Your shortened links</header>
-  <p>
-  <ul><% for(var x in urls) { %>
-    <li><%= x %> - <%= urls[x] %><form method="post" action="/urls/<%= x %>/delete">
-      <button>Delete</button><a href="/urls/<%= x %>" style="margin-left: 5px">Edit</a>
-  </p>
-  </form></li>
-  <% } %></ul>
+  <% include partials/_header.ejs %>
+  <header>Your shortened links</header>
+  <ul>
+    <% for(var shortURL in urls) { %>
+      <li>
+        <a href="/u/<%= shortURL %>"><%= shortURL %></a> -
+        <a href="<%= urls[shortURL].longURL %>"><%= urls[shortURL].longURL %></a>
+        <form method="post" action="/urls/<%= shortURL %>/delete">
+          <button>Delete</button>
+        </form>
+        <a href="/urls/<%= shortURL %>" style="margin-left: 5px">Edit</a>
+      </li>
+    <% } %>
+  </ul>
 
 </body>
 </html>
