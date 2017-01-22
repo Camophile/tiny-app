@@ -112,6 +112,20 @@ function checkLoggedIn(req, res, next) {
   }
 }
 
+function ownsDatabase(req, res, next){
+  let filteredUrls = {}
+  let userID = req.session.userID;
+
+  for(let id in res.locals.urls){
+    if(res.locals.urls[id].creator === userID){ //if the user (creator) exists in urlsDatabase
+      filteredUrls[id] = res.locals.urls[id]; //gives the current user an object of urls they own
+      next();
+    }else{ //if try to access url they don't own, sends error message
+      res.status(403).send(`<html>Does not exist! <a href="/urls">Back to links</a></html>`)
+    }
+  }
+}
+
 app.get('/', (req, res) => {//Redirect to /urls if logged in, if not --> /login
   if(req.session.userID) { //if user logged in
     res.redirect('/urls');//redirect to /urls
@@ -146,16 +160,11 @@ app.get("/urls/new", checkLoggedIn, (req, res) => {
   res.render("urls_new");
 });
 
-app.get('/urls/:id', checkLoggedIn, (req, res) => {
+app.get('/urls/:id', checkLoggedIn, ownsDatabase, (req, res) => {
 
 if(!urlDatabase[req.params.id]){
   return res.status(404).send(`resource ${req.params.id} not found`);
   }
-
-  // if(!req.session.userID){ //check whether user is signed in and whether user
-  //                         //corresponds to the user w access to the particular id
-  //   return res.status(401).send(`<html>Please <a href="/login">login</a></html>`);
-  // }
 
   let templateVars = {
     shortURL: req.params.id, // was req.params.id
