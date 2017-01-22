@@ -146,46 +146,29 @@ app.get("/urls/new", checkLoggedIn, (req, res) => {
   res.render("urls_new");
 });
 
-app.get('/urls/:id', (req, res) => { //first check whether user is signed in,
-                                    //then check whether that user corresponds
-                                    //to the user w access to the particular id
+app.get('/urls/:id', (req, res) => {
 
-  const url = res.locals.urls; // was `urlDatabase[req.params.id]`
-  console.log("url", url, "\n");
-
-  // if(!req.cookies["userID"]){ //**req.session.user_ID**
-  //   return res.status(401).send('does not exist');
-  // }
-
-  if(!req.session.userID){ //**req.session.user_ID**
-    return res.status(401).send('does not exist');
+if(!urlDatabase[req.params.id]){
+  return res.status(404).send(`resource ${req.params.id} not found`);
   }
 
-  // for(let key in url){
-  //   const shortURL = url[key];
-  //   const longURL = url[key].longURL;
-  // }
+  if(!req.session.userID){ //check whether user is signed in and whether user
+                          //corresponds to the user w access to the particular id
+    return res.status(401).send('does not exist');
+  }
 
   let templateVars = {
     shortURL: req.params.id, // was req.params.id
     longURL: urlDatabase[req.params.id].longURL
   };
 
-  console.log("shortURL", url.shortURL, "\n");
-
-  // console.log("longURL", url.shortURL.longURL, "\n");
-
-  res.render('urls_show', templateVars);
+return res.render('urls_show', templateVars);
 });
 
 // app.post("/urls/create", (req, res) => {
 app.post("/urls", (req, res) => {
-  // if(!req.cookies["userID"]){ //**req.session.user_ID**
-  //   res.redirect("/login")
-  //   return;
-  // }
 
-   if(!req.session.userID){ //**req.session.user_ID**
+   if(!req.session.userID){
     res.redirect("/login")
     return;
   }
