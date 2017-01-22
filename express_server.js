@@ -108,7 +108,7 @@ function checkLoggedIn(req, res, next) {
   if(req.session.userID) {
     next();
   }else{
-    res.status(401).send('User must be logged in. <a href="/login">Login</a>');
+    res.status(401).send('User must be <a href="/login">logged in</a>');
   }
 }
 
@@ -146,16 +146,16 @@ app.get("/urls/new", checkLoggedIn, (req, res) => {
   res.render("urls_new");
 });
 
-app.get('/urls/:id', (req, res) => {
+app.get('/urls/:id', checkLoggedIn, (req, res) => {
 
 if(!urlDatabase[req.params.id]){
   return res.status(404).send(`resource ${req.params.id} not found`);
   }
 
-  if(!req.session.userID){ //check whether user is signed in and whether user
-                          //corresponds to the user w access to the particular id
-    return res.status(401).send('does not exist');
-  }
+  // if(!req.session.userID){ //check whether user is signed in and whether user
+  //                         //corresponds to the user w access to the particular id
+  //   return res.status(401).send(`<html>Please <a href="/login">login</a></html>`);
+  // }
 
   let templateVars = {
     shortURL: req.params.id, // was req.params.id
