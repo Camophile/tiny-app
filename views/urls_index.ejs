@@ -7,6 +7,7 @@
 <body>
   <% include partials/_header.ejs %>
   <header>Your shortened links</header>
+  <a href="/urls/new">Create a new short link</a>
   <ul>
     <% for(var shortURL in urls) { %>
       <li>
@@ -14,11 +15,10 @@
         <a href="<%= urls[shortURL].longURL %>"><%= urls[shortURL].longURL %></a>
         <form method="post" action="/urls/<%= shortURL %>/delete">
           <button>Delete</button>
-        </form>
         <a href="/urls/<%= shortURL %>" style="margin-left: 5px">Edit</a>
+        </form>
       </li>
     <% } %>
   </ul>
-
 </body>
 </html>

@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
 const bcrypt = require('bcrypt');
 
@@ -12,7 +12,7 @@ app.use(cookieParser());
 
 app.set('view engine', 'ejs');
 
-
+app.disable('etag');//troubleshooting for "304" redirects instead of 200
 
 const usersDatabase = { //add two users and give one to each stored URL
   "a2a8dd": {
@@ -53,7 +53,6 @@ app.use(function(req, res, next){ //defines userID global objects
   }
 
 });
-
 
 function generateRandomString() {
   var text = "";
@@ -106,9 +105,6 @@ function doesPasswordMatch(password, userData) {
 }
 
 function checkLoggedIn(req, res, next) {
-  // if(req.cookies["userID"]) {
-  //   next();
-  // } else {
   if(req.session.userID) {
     next();
   }else{
@@ -123,15 +119,6 @@ app.get('/', (req, res) => {//Redirect to /urls if logged in, if not --> /login
     res.redirect('/login'); // redirect to /login
   }
 });
-
-// app.use('urls*?', (req, res, next) => ) //-creating function only applying to /urls
-//   if(req.body.userID){
-//     next(); ///make same change to all users for logged-in URL page
-//   }
-//     res.status(401).status(<html href="")
-//   }
-//   res.redirect("/urls");
-// });
 
 app.get('/urls', checkLoggedIn, (req, res) => { //loop through urlDatabase to see if userID
                                 //in that spot matches the req.body.id
@@ -151,10 +138,11 @@ app.get('/urls', checkLoggedIn, (req, res) => { //loop through urlDatabase to se
   let templateVars = {
     urls: filteredUrls
   };
+  console.log("app.get('/urls')")
   res.render('urls_index', templateVars);
 });
 
-app.get("/urls/new", (req, res) => {
+app.get("/urls/new", checkLoggedIn, (req, res) => {
   res.render("urls_new");
 });
 
@@ -190,8 +178,8 @@ app.get('/urls/:id', (req, res) => { //first check whether user is signed in,
   res.render('urls_show', templateVars);
 });
 
-app.post("/urls/create", (req, res) => {
-  console.log("inside /urls/create")
+// app.post("/urls/create", (req, res) => {
+app.post("/urls", (req, res) => {
   // if(!req.cookies["userID"]){ //**req.session.user_ID**
   //   res.redirect("/login")
   //   return;
@@ -213,7 +201,7 @@ app.post("/urls/create", (req, res) => {
                             creator: req.session.userID //**req.session.user_ID**
                             };
 
-  res.redirect(`/urls/${shortURL}`);
+  res.redirect('/urls');
 });
 
 app.get("/u/:shortURL", (req, res) => {
