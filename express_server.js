@@ -39,7 +39,7 @@ app.use(cookieSession({
 app.use(function(req, res, next){ //defines userID global objects
                                   //accessible to templates
   res.locals.user = null;
-  res.locals.urls = null;
+  res.locals.urls = null; //otherwise the ejs template will read these as "not defined"
 
   if(req.session.userID){
      res.locals.user = usersDatabase[req.session.userID];
@@ -131,8 +131,6 @@ app.get('/urls', checkLoggedIn, (req, res) => { //loop through urlDatabase to se
     }
   }
 
-  console.log("FilteredUrls in /urls: ", filteredUrls);
-
   let templateVars = {
     urls: filteredUrls
   };
@@ -196,11 +194,9 @@ app.post("/urls/:id", (req, res) => {
   var URL = req.body.longURL
   if(!URL.startsWith('http')){
     URL = 'http://' + req.body["longURL"];
-    console.log("no http");
   }
 
   urlDatabase[req.params.id].longURL = URL;
-  console.log("yes http");
   res.redirect('/urls/' + req.params.id);
 });
 
@@ -263,7 +259,6 @@ app.post("/register", (req, res) => {
   }
 
   let hashed_password = bcrypt.hashSync(password, 10);
-  console.log("Hashed password", hashed_password);
 
   req.session.userID = id;
 
@@ -272,8 +267,6 @@ app.post("/register", (req, res) => {
     email: email,
     password: hashed_password
   };
-
-  console.log("usersDatabase[id].password", usersDatabase[id].password);
 
   res.redirect("/")
 });
