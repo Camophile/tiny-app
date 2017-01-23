@@ -112,19 +112,20 @@ function checkLoggedIn(req, res, next) {
   }
 }
 
-function ownsDatabase(req, res, next){
-  let filteredUrls = {}
-  let userID = req.session.userID;
+// function ownsDatabase(req, res, next){
+//   let filteredUrls = {}
+//   let userID = req.session.userID;
+//   console.log("From ownsDatabase(): userID = ", userID)
 
-  for(let id in res.locals.urls){
-    if(res.locals.urls[id].creator === userID){ //if the user (creator) exists in urlsDatabase
-      filteredUrls[id] = res.locals.urls[id]; //gives the current user an object of urls they own
-      next();
-    }else{ //if try to access url they don't own, sends error message
-      res.status(403).send(`<html>Does not exist! <a href="/urls">Back to links</a></html>`)
-    }
-  }
-}
+//   for(let id in res.locals.urls){
+//     if(res.locals.urls[id].creator === userID){ //if the user (creator) exists in urlsDatabase
+//       filteredUrls[id] = res.locals.urls[id]; //gives the current user an object of urls they own
+//       next();
+//     }else{ //if try to access url they don't own, sends error message
+//       res.status(403).send(`<html>Does not exist! <a href="/urls">Back to links</a></html>`)
+//     }
+//   }
+// }
 
 app.get('/', (req, res) => {//Redirect to /urls if logged in, if not --> /login
   if(req.session.userID) { //if user logged in
@@ -149,10 +150,11 @@ app.get('/urls', checkLoggedIn, (req, res) => { //loop through urlDatabase to se
     }
   }
 
+  console.log("FilteredUrls in /urls: ", filteredUrls);
+
   let templateVars = {
     urls: filteredUrls
   };
-  console.log("app.get('/urls')")
   res.render('urls_index', templateVars);
 });
 
@@ -160,16 +162,20 @@ app.get("/urls/new", checkLoggedIn, (req, res) => {
   res.render("urls_new");
 });
 
-app.get('/urls/:id', checkLoggedIn, ownsDatabase, (req, res) => {
+app.get('/urls/:id', checkLoggedIn, (req, res) => {
+
+if(urlDatabase[req.params.id].creator !== req.session.userID){
+    return res.status(403).send(`<html>Does not exist! <a href="/urls">Back to links</a></html>`);
+  }
 
 if(!urlDatabase[req.params.id]){
   return res.status(404).send(`resource ${req.params.id} not found`);
   }
 
-  let templateVars = {
-    shortURL: req.params.id, // was req.params.id
-    longURL: urlDatabase[req.params.id].longURL
-  };
+let templateVars = {
+  shortURL: req.params.id, // was req.params.id
+  longURL: urlDatabase[req.params.id].longURL
+};
 
 return res.render('urls_show', templateVars);
 });
@@ -185,7 +191,6 @@ app.post("/urls", (req, res) => {
   var URL = req.body.longURL
   if(!URL.startsWith('http')){
     URL = 'http://' + req.body["longURL"];
-    console.log("no http");
   }
 
   const shortURL = generateRandomString();
@@ -207,12 +212,18 @@ app.post("/urls/:id/delete", checkLoggedIn, (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  console.log("POST /urls/id")
+  console.log("POST /urls/id");
+  console.log("urlDatabase[req.params.id].creator:", urlDatabase[req.params.id].creator);
+  console.log("req.session.userID:", req.session.userID);
+
   var URL = req.body.longURL
   if(!URL.startsWith('http')){
     URL = 'http://' + req.body["longURL"];
     console.log("no http");
   }
+
+  // console.log("FilteredUrls in urls/:id: ", filteredUrls);
+
   urlDatabase[req.params.id].longURL = URL;
   console.log("yes http");
   res.redirect('/urls/' + req.params.id);
