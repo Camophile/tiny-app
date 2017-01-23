@@ -47,7 +47,7 @@ app.use(function(req, res, next){ //defines userID global objects
   res.locals.urls = null;
 
   if(req.session.userID){
-     res.locals.user = usersDatabase[req.session.userID]; //usersDatabase[req.cookie.userID];
+     res.locals.user = usersDatabase[req.session.userID];
      res.locals.urls = urlDatabase;
      next();
   }else{
@@ -113,26 +113,11 @@ function checkLoggedIn(req, res, next) {
   }
 }
 
-// function ownsDatabase(req, res, next){
-//   let filteredUrls = {}
-//   let userID = req.session.userID;
-//   console.log("From ownsDatabase(): userID = ", userID)
-
-//   for(let id in res.locals.urls){
-//     if(res.locals.urls[id].creator === userID){ //if the user (creator) exists in urlsDatabase
-//       filteredUrls[id] = res.locals.urls[id]; //gives the current user an object of urls they own
-//       next();
-//     }else{ //if try to access url they don't own, sends error message
-//       res.status(403).send(`<html>Does not exist! <a href="/urls">Back to links</a></html>`)
-//     }
-//   }
-// }
-
 app.get('/', (req, res) => {//Redirect to /urls if logged in, if not --> /login
   if(req.session.userID) { //if user logged in
     res.redirect('/urls');//redirect to /urls
   } else {
-    res.redirect('/login'); // redirect to /login
+    res.redirect('/login');
   }
 });
 
@@ -174,14 +159,13 @@ if(!urlDatabase[req.params.id]){
   }
 
 let templateVars = {
-  shortURL: req.params.id, // was req.params.id
+  shortURL: req.params.id,
   longURL: urlDatabase[req.params.id].longURL
 };
 
 return res.render('urls_show', templateVars);
 });
 
-// app.post("/urls/create", (req, res) => {
 app.post("/urls", (req, res) => {
 
    if(!req.session.userID){
@@ -196,7 +180,7 @@ app.post("/urls", (req, res) => {
 
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = { longURL: URL,
-                            creator: req.session.userID //**req.session.user_ID**
+                            creator: req.session.userID
                             };
 
   res.redirect('/urls');
@@ -213,17 +197,12 @@ app.post("/urls/:id/delete", checkLoggedIn, (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  console.log("POST /urls/id");
-  console.log("urlDatabase[req.params.id].creator:", urlDatabase[req.params.id].creator);
-  console.log("req.session.userID:", req.session.userID);
 
   var URL = req.body.longURL
   if(!URL.startsWith('http')){
     URL = 'http://' + req.body["longURL"];
     console.log("no http");
   }
-
-  // console.log("FilteredUrls in urls/:id: ", filteredUrls);
 
   urlDatabase[req.params.id].longURL = URL;
   console.log("yes http");
@@ -241,21 +220,18 @@ app.post("/login", (req, res) => {
   // if matching then log user in and redirect to '/'
 
   // console.log("req.session.ID:", req.session.id);
-  console.log("False password:", password)
-  console.log("userID:", getIdByEmail(email));
+
   let userID = getIdByEmail(email);
   req.session.userID = userID;
-  console.log("req.sessions.userID:", req.session.userID)
-  // console.log(usersDatabase[req.session.userID].password);
-  if(!req.session.userID && !bcrypt.compareSync(password, usersDatabase[userID].password)) {
+
+  if(!req.session.userID || !bcrypt.compareSync(password, usersDatabase[userID].password)) {
     res.status(401);
     res.send('Unable to login.');
     return;
   }
 
   // this happens if user has input valid email and password
-  // res.cookie("userID", userID);
-  // res.session("userID", userID);
+
   res.redirect('/');
 });
 
@@ -294,7 +270,6 @@ app.post("/register", (req, res) => {
   let hashed_password = bcrypt.hashSync(password, 10);
   console.log("Hashed password", hashed_password);
 
-  // res.cookie("userID", id);
   req.session.userID = id;
 
   usersDatabase[id] = {
