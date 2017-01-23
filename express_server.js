@@ -19,11 +19,6 @@ const usersDatabase = { //add two users and give one to each stored URL
     id: "a2a8dd",
     email: "test@email.com",
     password: "password"
-  },
-  "y51qm9c": {
-    id:"y51qm9c",
-    email: "karl@gmail.com",
-    password: "karl"
   }
 };
 
