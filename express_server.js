@@ -239,13 +239,14 @@ app.post("/login", (req, res) => {
   // if not matching then status 401
   // if matching then log user in and redirect to '/'
 
-  let userID = getIdByEmail(email);
-
+  // console.log("req.session.ID:", req.session.id);
+  console.log("False password:", password)
+  console.log("userID:", getIdByEmail(email));
+  userID = getIdByEmail(email);
   req.session.userID = userID;
-  console.log(req.session.userID);
-
-  if(!req.session.userID && !bcrypt.compareSync(password, usersDatabase[userID].password)) {
-  //if(!req.session.userID){
+  console.log("req.sessions.userID:", req.session.userID)
+  // console.log(usersDatabase[req.session.userID].password);
+  if(!req.session.userID || !bcrypt.compareSync(password, usersDatabase[userID].password)) {
     res.status(401);
     res.send('Unable to login.');
     return;
@@ -267,6 +268,10 @@ app.post("/logout", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
+  if(req.session.userID) {
+
+    return res.redirect('/');
+  }
   res.render("user_registration")
 });
 
@@ -275,8 +280,6 @@ app.post("/register", (req, res) => {
 
   let email = req.body["email"];
   let password = req.body["password"];
-
-  console.log("Typed password", password);
 
   if(isFieldBlank(email, password)){
     res.status(400).send("Email and/or password field is empty");

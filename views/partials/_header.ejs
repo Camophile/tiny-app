@@ -4,6 +4,7 @@
   <% if(user) { %>
     <form action= "/logout" method=post>
     <label for="email"><%= user.email %></label><button>Log out</button>
+    <a href="/urls">My Links</a>
     </form>
 
   <% } else { %>
