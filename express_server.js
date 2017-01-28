@@ -42,10 +42,10 @@ app.use(function(req, res, next){ //defines userID global objects
   res.locals.urls = null; //otherwise the ejs template will read these as "not defined"
 
   if(req.session.userID){
-     res.locals.user = usersDatabase[req.session.userID];
-     res.locals.urls = urlDatabase;
-     next();
-  }else{
+    res.locals.user = usersDatabase[req.session.userID];
+    res.locals.urls = urlDatabase;
+    next();
+  } else {
     next();
   }
 });
@@ -185,11 +185,21 @@ app.get("/u/:shortURL", (req, res) => {
 })
 
 app.post("/urls/:id/delete", checkLoggedIn, (req, res) => {
+  if(req.session.user !== res.locals.user.id){
+    res.status(403).send("Unauthorized action; please go back and try again");
+    return;
+  }
+
   delete urlDatabase[req.params.id];
   res.redirect('/');
 });
 
-app.post("/urls/:id", (req, res) => {
+app.post("/urls/:id", checkLoggedIn, (req, res) => {
+  if(req.session.user !== res.locals.user.id){
+    res.status(403).send("Unauthorized action; please go back and try again");
+    return;
+  }
+
 
   var URL = req.body.longURL
   if(!URL.startsWith('http')){
@@ -237,7 +247,6 @@ app.post("/logout", (req, res) => {
 
 app.get("/register", (req, res) => {
   if(req.session.userID) {
-
     return res.redirect('/');
   }
   res.render("user_registration")
